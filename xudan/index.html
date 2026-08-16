@@ -309,6 +309,28 @@
       transform: translate(-50%, 0);
     }
 
+    #autoplayHint {
+      position: fixed;
+      left: 50%;
+      bottom: 88px;
+      transform: translateX(-50%);
+      z-index: 6;
+      padding: 12px 18px;
+      border-radius: 8px;
+      background: rgba(15, 20, 38, 0.94);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 14px;
+      pointer-events: none;
+      display: none;
+      max-width: calc(100vw - 40px);
+      text-align: center;
+    }
+
+    #autoplayHint.show {
+      display: block;
+    }
+
     @media (max-width: 520px) {
       main { padding: 34px 16px 70px; }
       h1 { font-size: 36px; }
@@ -362,8 +384,9 @@
     </footer>
   </main>
   <div id="toast" role="status"></div>
+  <div id="autoplayHint">点一下屏幕，听我放的歌</div>
   <audio id="voicePlayer" preload="none"></audio>
-  <audio id="songPlayer" preload="metadata" src="../song.mp3"></audio>
+  <audio id="songPlayer" preload="auto" playsinline autoplay src="../song.mp3"></audio>
 
   <script>
     const sections = [
@@ -388,6 +411,7 @@
     const playSongBtn = document.getElementById("playSong");
     const nodes = [];
     let resolveCurrent = null;
+    let autoplayStarted = false;
 
     function voiceSrc(index) {
       return "../voice/line-" + String(index + 1).padStart(2, "0") + ".mp3";
@@ -577,14 +601,64 @@
       if (!songPlayer) return;
       stopSpeech();
       if (songPlayer.paused) {
-        songPlayer.play();
-        playSongBtn.textContent = "暂停";
+        const attempt = songPlayer.play();
+        if (attempt && attempt.then) {
+          attempt.then(markSongStarted).catch(() => {});
+        } else {
+          markSongStarted();
+        }
       } else {
         songPlayer.pause();
         playSongBtn.textContent = "继续";
       }
     }
     playSongBtn.addEventListener("click", playSong);
+
+    function markSongStarted() {
+      autoplayStarted = true;
+      playSongBtn.textContent = "暂停";
+      const hint = document.getElementById("autoplayHint");
+      if (hint) hint.classList.remove("show");
+    }
+
+    function showAutoplayHint() {
+      const hint = document.getElementById("autoplayHint");
+      if (hint) hint.classList.add("show");
+    }
+
+    function tryAutoplay() {
+      if (!songPlayer || autoplayStarted) return;
+      const attempt = songPlayer.play();
+      if (attempt && attempt.then) {
+        attempt.then(markSongStarted).catch(() => {
+          if (!autoplayStarted) showAutoplayHint();
+        });
+      } else {
+        markSongStarted();
+      }
+    }
+
+    document.addEventListener("WeixinJSBridgeReady", tryAutoplay, false);
+    document.addEventListener("DOMContentLoaded", tryAutoplay);
+    window.addEventListener("load", tryAutoplay);
+    window.addEventListener("pageshow", tryAutoplay);
+
+    ["touchstart", "touchend", "click"].forEach((eventName) => {
+      document.addEventListener(
+        eventName,
+        (event) => {
+          if (event.target && event.target.closest && event.target.closest("#playSong")) return;
+          if (!songPlayer || autoplayStarted) return;
+          const attempt = songPlayer.play();
+          if (attempt && attempt.then) {
+            attempt.then(markSongStarted).catch(() => {});
+          } else {
+            markSongStarted();
+          }
+        },
+        { passive: true }
+      );
+    });
 
     voiceBtn.addEventListener("click", () => {
       const next = voiceOn() ? "false" : "true";
