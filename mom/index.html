@@ -330,6 +330,7 @@
     </footer>
   </main>
   <div id="toast" role="status"></div>
+  <audio id="voicePlayer" preload="none"></audio>
 
   <script>
     const sections = [
@@ -465,7 +466,13 @@
     const voiceBtn = document.getElementById("voice");
     const shareBtn = document.getElementById("share");
     const toast = document.getElementById("toast");
+    const voicePlayer = document.getElementById("voicePlayer");
     const nodes = [];
+    let resolveCurrent = null;
+
+    function voiceSrc(index) {
+      return "../voice/line-" + String(index + 1).padStart(2, "0") + ".mp3";
+    }
 
     sections.forEach((section) => {
       const singer = document.createElement("div");
@@ -511,6 +518,14 @@
         clearTimeout(speechTimer);
         speechTimer = null;
       }
+      if (resolveCurrent) {
+        const done = resolveCurrent;
+        resolveCurrent = null;
+        done();
+      }
+      if (voicePlayer) {
+        voicePlayer.pause();
+      }
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -532,20 +547,58 @@
       });
     }
 
-    function waitSpeech(text) {
+    function fallbackSpeech(text, done) {
+      if (!("speechSynthesis" in window)) {
+        speechTimer = setTimeout(done, Math.min(2400, 900 + text.length * 150));
+        return;
+      }
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "zh-CN";
+      utter.rate = 0.95;
+      utter.onend = done;
+      utter.onerror = done;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+      speechTimer = setTimeout(done, Math.max(2600, text.length * 320));
+    }
+
+    function waitSpeech(index, text) {
       return new Promise((resolve) => {
-        if (!voiceOn() || !("speechSynthesis" in window)) {
+        if (!voiceOn()) {
           speechTimer = setTimeout(resolve, Math.min(2400, 900 + text.length * 150));
           return;
         }
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = "zh-CN";
-        utter.rate = 0.95;
-        utter.onend = resolve;
-        utter.onerror = resolve;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utter);
-        speechTimer = setTimeout(resolve, Math.max(2600, text.length * 320));
+        if (!voicePlayer) {
+          fallbackSpeech(text, resolve);
+          return;
+        }
+        voicePlayer.pause();
+        voicePlayer.currentTime = 0;
+        voicePlayer.src = voiceSrc(index);
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          resolve();
+        };
+        const fail = () => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          fallbackSpeech(text, resolve);
+        };
+        const timer = setTimeout(finish, 15000);
+        function cleanup() {
+          clearTimeout(timer);
+          voicePlayer.removeEventListener("ended", finish);
+          voicePlayer.removeEventListener("error", fail);
+          if (resolveCurrent === finish) resolveCurrent = null;
+        }
+        resolveCurrent = finish;
+        voicePlayer.addEventListener("ended", finish);
+        voicePlayer.addEventListener("error", fail);
+        voicePlayer.play().catch(fail);
       });
     }
 
@@ -583,7 +636,7 @@
         const item = nodes[index];
         item.el.classList.add("visible");
         item.el.scrollIntoView({ block: "center", behavior: "smooth" });
-        await waitSpeech(item.text);
+        await waitSpeech(index, item.text);
         index += 1;
       }
       finish();
