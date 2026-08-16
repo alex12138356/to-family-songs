@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>致妈妈 · I'm so sorry（我很抱歉）</title>
+  <meta name="description" content="这首歌的每一句，都是我想对你说的。">
+  <meta name="theme-color" content="#0b1020">
+  <meta property="og:title" content="致妈妈 · I'm so sorry（我很抱歉）">
+  <meta property="og:description" content="这首歌的每一句，都是我想对你说的。">
+  <meta property="og:image" content="assets/cover.png">
+  <style>
+    :root {
+      --bg: #0b1020;
+      --ink: #f6f0e3;
+      --muted: rgba(246, 240, 227, 0.62);
+      --line: rgba(255, 255, 255, 0.12);
+      --gold: #f2c877;
+      --rose: #e7a4b4;
+      --cyan: #8ec8d8;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(120% 70% at 50% -10%, #1b2340 0%, var(--bg) 48%),
+        var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+        "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    #rain {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 56px 20px 88px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 28px 8px 34px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin: 0 0 22px;
+      padding: 6px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 44px;
+      line-height: 1.22;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    h1 span {
+      display: block;
+      margin-top: 8px;
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .sub {
+      margin: 18px auto 28px;
+      max-width: 460px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .cover-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+
+    .cover-row img {
+      width: 108px;
+      height: 108px;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42);
+      border: 1px solid var(--line);
+    }
+
+    .meta {
+      text-align: left;
+      max-width: 300px;
+    }
+
+    .meta p {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .meta a,
+    footer a {
+      color: var(--cyan);
+      text-decoration: none;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(142, 200, 216, 0.35);
+      padding-bottom: 2px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 15px;
+      min-height: 48px;
+      padding: 0 22px;
+      border-radius: 8px;
+      transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(1px); }
+
+    #play {
+      background: var(--gold);
+      color: #241a08;
+      font-weight: 700;
+    }
+
+    #play:hover { background: #ffdc8f; }
+
+    #voice {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    #voice[data-on="false"] {
+      color: var(--muted);
+    }
+
+    #lyrics {
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .singer {
+      margin: 34px 0 12px;
+      color: var(--rose);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .line {
+      margin: 11px 0;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.55s ease, transform 0.55s ease,
+        border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .line.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .line.active {
+      border-color: rgba(242, 200, 119, 0.72);
+      background: rgba(242, 200, 119, 0.1);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+    }
+
+    .line p {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+
+    .line small {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .ending {
+      margin-top: 44px;
+      padding: 30px 20px;
+      text-align: center;
+      border-top: 1px solid var(--line);
+    }
+
+    .ending p {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .ending small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px 18px;
+      margin-top: 34px;
+      padding-top: 26px;
+      border-top: 1px solid var(--line);
+      align-items: center;
+    }
+
+    #share {
+      background: rgba(142, 200, 216, 0.12);
+      color: var(--ink);
+      border: 1px solid rgba(142, 200, 216, 0.38);
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      transform: translate(-50%, 18px);
+      z-index: 5;
+      padding: 11px 18px;
+      border-radius: 8px;
+      background: rgba(15, 20, 38, 0.92);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      max-width: calc(100vw - 40px);
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 520px) {
+      main { padding: 34px 16px 70px; }
+      h1 { font-size: 36px; }
+      h1 span { font-size: 28px; }
+      .sub { font-size: 15px; }
+      .cover-row { gap: 14px; }
+      .cover-row img { width: 92px; height: 92px; }
+      .meta { max-width: 230px; }
+      .line p { font-size: 17px; }
+      #play { flex: 1 1 100%; }
+      #voice { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="rain" aria-hidden="true"></canvas>
+  <main>
+    <header class="hero">
+      <p class="eyebrow">TO 妈妈 · 一封歌词信</p>
+      <h1>I'm so sorry<br><span>我很抱歉</span></h1>
+      <p class="sub">这首歌的每一句，都是我想对你说的。</p>
+      <div class="cover-row">
+        <img src="assets/cover.png" alt="歌曲封面《I'm so sorry》">
+        <div class="meta">
+          <p>Nomad / 罗湘骏eiteen / GJ / DOUBLEBLACK</p>
+          <a href="https://163cn.tv/bdeAtTnC" target="_blank" rel="noopener">在网易云听原曲</a>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="play" type="button">开始，听我说</button>
+        <button id="voice" type="button" data-on="true">声音：开</button>
+      </div>
+    </header>
+
+    <section id="lyrics" aria-label="歌词"></section>
+
+    <div class="ending">
+      <p>I'm so sorry</p>
+      <p>但我从不后悔遇见你</p>
+      <small>—— 给你的歌词信</small>
+    </div>
+
+    <footer>
+      <button id="share" type="button">分享给姑姑</button>
+      <a href="https://163cn.tv/bdeAtTnC" target="_blank" rel="noopener">打开网易云原曲</a>
+    </footer>
+  </main>
+  <div id="toast" role="status"></div>
+
+  <script>
+    const sections = [
+      {
+        singer: "DOUBLEBLACK",
+        lines: [
+          ["I'm so sorry"],
+          ["指的是这些年"],
+          ["忘记回复的信"],
+          ["I'm so sorry"],
+          ["很多的瞬间"],
+          ["无法保持冷静"],
+          ["I'm so sorry"],
+          ["浑噩着度日"],
+          ["不停在伴奏上"],
+          ["留下我故事"],
+          ["我"],
+          ["留起了胡子"],
+          ["丢掉了焦躁"],
+          ["再也没固执"]
+        ]
+      },
+      {
+        singer: "Nomad",
+        lines: [
+          ["我是倔强的"],
+          ["明知道这条路很难的"],
+          ["但我快乐着"],
+          ["望着走过的路感叹着"],
+          ["当我跨过了贫穷和阶级"],
+          ["当我完成了和她的约定"],
+          ["我想划着船轻轻来到"],
+          ["我要乘着风向上飞去"]
+        ]
+      },
+      {
+        singer: "DOUBLEBLACK",
+        lines: [
+          ["月光是我依靠"],
+          ["柔软的像她的怀抱"],
+          ["房子发着霉的味道"],
+          ["提醒我要变得更好"],
+          ["有时候想逃离这里"],
+          ["可是我剪不断这里的回忆"],
+          ["我们都留下过泪滴"],
+          ["从无到有靠不断的累积"]
+        ]
+      },
+      {
+        singer: "Eiteen",
+        lines: [
+          ["它把我往前面推"],
+          ["努力的奔跑绝不会后悔"],
+          ["风吹掉脸上的灰"],
+          ["下次说谢谢"],
+          ["再不提 sorry"],
+          ["我过的越来越好"],
+          ["给自己一个拥抱"],
+          ["脸上我总带着笑"],
+          ["泥泞路光着脚"],
+          ["哪怕会摔倒"]
+        ]
+      },
+      {
+        singer: "DOUBLEBLACK & Nomad",
+        lines: [
+          ["IM SO SORRY", "对不起为什么要说对不起她说全世界都在爱我但是我自己恨自己"],
+          ["IM SO SORRY", "为了你为什么我要为了你为什么不停的逼自己放下不停地问自己"],
+          ["IM SO SORRY", "夜雨绵绵心头的难言之隐孤独地人以后才想起那一份是你"],
+          ["IM SO SORRY", "im so sorry im so sorry即便柳暗花明但我从不后悔遇见你"]
+        ]
+      },
+      {
+        singer: "GJ",
+        lines: [
+          ["雪花又融化了"],
+          ["太阳又出来了"],
+          ["树叶又发新芽"],
+          ["可你已远去了"],
+          ["过去就过去吧"],
+          ["已成为定局了"],
+          ["梦里的颜色"],
+          ["是孤独的蓝色"]
+        ]
+      },
+      {
+        singer: "Eiteen",
+        lines: [
+          ["还记得"],
+          ["靠在我的肩膀"],
+          ["你浅浅的呼吸"],
+          ["看窗外的晚霞"],
+          ["落你脸颊的红晕"],
+          ["时光静静逝去"],
+          ["我只想"],
+          ["紧紧抱住你"],
+          ["可我丢了你.."]
+        ]
+      },
+      {
+        singer: "Nomad",
+        lines: [
+          ["如果我年少有为不自卑"],
+          ["也许就不会后退"],
+          ["真想把伤人的话全部都收回"],
+          ["说过不会后悔的你"],
+          ["也开始后悔"],
+          ["在被窝里哭泣"],
+          ["总是听见我的 sorry"]
+        ]
+      },
+      {
+        singer: "GJ",
+        lines: [
+          ["都是我的问题"],
+          ["痛到无法呼吸"],
+          ["只能对你说"]
+        ]
+      },
+      {
+        singer: "DOUBLEBLACK & Nomad",
+        lines: [
+          ["IM SO SORRY", "对不起为什么要说对不起她说全世界都在爱我但是我自己恨自己"],
+          ["IM SO SORRY", "为了你为什么我要为了你为什么不停的逼自己放下不停地问自己"],
+          ["IM SO SORRY", "夜雨绵绵心头的难言之隐孤独地人以后才想起那一份是你"],
+          ["IM SO SORRY", "im so sorry im so sorry即便柳暗花明但我从不后悔遇见你"]
+        ]
+      }
+    ];
+
+    const lyrics = document.getElementById("lyrics");
+    const playBtn = document.getElementById("play");
+    const voiceBtn = document.getElementById("voice");
+    const shareBtn = document.getElementById("share");
+    const toast = document.getElementById("toast");
+    const nodes = [];
+
+    sections.forEach((section) => {
+      const singer = document.createElement("div");
+      singer.className = "singer";
+      singer.textContent = section.singer;
+      lyrics.appendChild(singer);
+
+      section.lines.forEach(([text, sub]) => {
+        const line = document.createElement("div");
+        line.className = "line";
+        const p = document.createElement("p");
+        p.textContent = text;
+        line.appendChild(p);
+        if (sub) {
+          const small = document.createElement("small");
+          small.textContent = sub;
+          line.appendChild(small);
+        }
+        lyrics.appendChild(line);
+        nodes.push({ el: line, text, sub });
+      });
+    });
+
+    const reveal = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("visible");
+      });
+    }, { threshold: 0.18 });
+    nodes.forEach((item) => reveal.observe(item.el));
+
+    let playing = false;
+    let paused = false;
+    let current = -1;
+    let timer = null;
+    let speechTimer = null;
+
+    function voiceOn() {
+      return voiceBtn.dataset.on === "true";
+    }
+
+    function stopSpeech() {
+      if (speechTimer) {
+        clearTimeout(speechTimer);
+        speechTimer = null;
+      }
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function speak(text) {
+      if (!voiceOn() || !("speechSynthesis" in window)) return false;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "zh-CN";
+      utter.rate = 0.95;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+      return true;
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => {
+        timer = setTimeout(resolve, ms);
+      });
+    }
+
+    function waitSpeech(text) {
+      return new Promise((resolve) => {
+        if (!voiceOn() || !("speechSynthesis" in window)) {
+          speechTimer = setTimeout(resolve, Math.min(2400, 900 + text.length * 150));
+          return;
+        }
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "zh-CN";
+        utter.rate = 0.95;
+        utter.onend = resolve;
+        utter.onerror = resolve;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
+        speechTimer = setTimeout(resolve, Math.max(2600, text.length * 320));
+      });
+    }
+
+    async function playAll() {
+      if (playing && !paused) {
+        paused = true;
+        playBtn.textContent = "继续听";
+        stopSpeech();
+        clearTimeout(timer);
+        return;
+      }
+      if (playing && paused) {
+        paused = false;
+        playBtn.textContent = "暂停";
+        if (current < nodes.length) await step(current);
+        return;
+      }
+
+      playing = true;
+      paused = false;
+      playBtn.textContent = "暂停";
+      current = 0;
+      nodes.forEach((item) => item.el.classList.remove("visible", "active"));
+      await step(0);
+    }
+
+    async function step(index) {
+      while (index < nodes.length) {
+        if (paused) {
+          current = index;
+          return;
+        }
+        current = index;
+        nodes.forEach((item, i) => item.el.classList.toggle("active", i === index));
+        const item = nodes[index];
+        item.el.classList.add("visible");
+        item.el.scrollIntoView({ block: "center", behavior: "smooth" });
+        await waitSpeech(item.text);
+        index += 1;
+      }
+      finish();
+    }
+
+    function finish() {
+      playing = false;
+      paused = false;
+      current = -1;
+      playBtn.textContent = "再听一遍";
+      stopSpeech();
+      document.querySelector(".ending")?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+
+    playBtn.addEventListener("click", playAll);
+
+    voiceBtn.addEventListener("click", () => {
+      const next = voiceOn() ? "false" : "true";
+      voiceBtn.dataset.on = next;
+      voiceBtn.textContent = next === "true" ? "声音：开" : "声音：关";
+      if (next === "false") stopSpeech();
+    });
+
+    shareBtn.addEventListener("click", async () => {
+      const url = location.href;
+      let ok = false;
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(url);
+          ok = true;
+        } catch (err) {
+          ok = false;
+        }
+      }
+      if (!ok) {
+        const temp = document.createElement("textarea");
+        temp.value = url;
+        document.body.appendChild(temp);
+        temp.select();
+        try {
+          ok = document.execCommand("copy");
+        } catch (err) {
+          ok = false;
+        }
+        temp.remove();
+      }
+      showToast(ok ? "链接已复制，直接发给姑姑吧" : "长按网址就能复制：" + url);
+    });
+
+    let toastTimer = null;
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 3600);
+    }
+
+    const canvas = document.getElementById("rain");
+    const ctx = canvas.getContext("2d");
+    let drops = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const count = window.innerWidth < 640 ? 54 : 96;
+      drops = Array.from({ length: count }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        len: 14 + Math.random() * 20,
+        speed: 7 + Math.random() * 8,
+        alpha: 0.12 + Math.random() * 0.22
+      }));
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(190, 215, 235, 0.6)";
+      drops.forEach((d) => {
+        ctx.globalAlpha = d.alpha;
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x - d.speed * 0.18, d.y + d.len);
+        ctx.stroke();
+        d.y += d.speed;
+        if (d.y > canvas.height + 30) {
+          d.y = -30;
+          d.x = Math.random() * canvas.width;
+        }
+      });
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(draw);
+    }
+
+    resize();
+    draw();
+    window.addEventListener("resize", resize);
+  </script>
+</body>
+</html>
