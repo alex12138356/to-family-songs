@@ -386,7 +386,7 @@
   <div id="toast" role="status"></div>
   <div id="autoplayHint">点一下屏幕，听我放的歌</div>
   <audio id="voicePlayer" preload="none"></audio>
-  <audio id="songPlayer" preload="auto" playsinline autoplay src="../song.mp3"></audio>
+  <audio id="songPlayer" preload="auto" playsinline webkit-playsinline x5-playsinline autoplay src="../song.mp3"></audio>
 
   <script>
     const sections = [
@@ -420,6 +420,13 @@
     const nodes = [];
     let resolveCurrent = null;
     let autoplayStarted = false;
+    let autoplayHintTimer = null;
+
+    if (songPlayer) {
+      songPlayer.volume = 1;
+      songPlayer.muted = false;
+      songPlayer.addEventListener("playing", markSongStarted);
+    }
 
     function voiceSrc(index) {
       return "../voice/line-" + String(index + 1).padStart(2, "0") + ".mp3";
@@ -623,6 +630,10 @@
     playSongBtn.addEventListener("click", playSong);
 
     function markSongStarted() {
+      if (autoplayHintTimer) {
+        clearTimeout(autoplayHintTimer);
+        autoplayHintTimer = null;
+      }
       autoplayStarted = true;
       playSongBtn.textContent = "暂停";
       const hint = document.getElementById("autoplayHint");
@@ -637,6 +648,10 @@
     function tryAutoplay() {
       if (!songPlayer || autoplayStarted) return;
       const attempt = songPlayer.play();
+      if (autoplayHintTimer) clearTimeout(autoplayHintTimer);
+      autoplayHintTimer = setTimeout(() => {
+        if (!autoplayStarted && songPlayer && songPlayer.paused) showAutoplayHint();
+      }, 1200);
       if (attempt && attempt.then) {
         attempt.then(markSongStarted).catch(() => {
           if (!autoplayStarted) showAutoplayHint();
